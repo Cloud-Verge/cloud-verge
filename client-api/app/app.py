@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 
-from .config import AppCofig
-from .routes import router
+from config import AppCofig
+from routes import router
 
 
 def create_app(config: AppCofig) -> FastAPI:
