@@ -111,7 +111,7 @@ async def get_download(
     file_id = download.file_id
     expected_token = download.user_token
 
-    if get_token(request.headers) != expected_token:
+    if expected_token and get_token(request.headers) != expected_token:
         return JSONResponse({
             "status": "error",
             "message": "Authorization failed",

@@ -12,7 +12,9 @@ class FileEntry(Base):
 
     id: Mapped[str] = mapped_column(primary_key=True, index=True)
     owner: Mapped[int] = mapped_column(nullable=False, index=True)
+    access: Mapped[int] = mapped_column(nullable=False)
     filename: Mapped[str] = mapped_column(nullable=True)
+
     locations: Mapped[list[str]] = mapped_column(JSON(), nullable=False)
     created_at: Mapped[datetime.datetime] = mapped_column(
         DateTime(timezone=False), server_default=func.now()

@@ -1,3 +1,4 @@
+from typing import Optional
 from pydantic import BaseModel
 
 
@@ -9,7 +10,7 @@ class UploadDemand(BaseModel):
 
 class DownloadDemand(BaseModel):
     file_id: str
-    user_token: str
+    user_token: Optional[str]
 
 
 uploads_cache: dict[str, UploadDemand] = dict()
