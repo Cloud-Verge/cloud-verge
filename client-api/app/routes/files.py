@@ -60,6 +60,7 @@ async def post_ask_upload(
             owner=user.id,
             locations=[]
         ))
+        await db_session.commit()
 
     return JSONResponse({
         "status": "ok",

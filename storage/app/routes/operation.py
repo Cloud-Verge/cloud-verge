@@ -74,6 +74,7 @@ async def put_upload(
         db_session.add(
             FileEntry(id=file_id, filename=file.filename, local_path=local_path)
         )
+        await db_session.commit()
 
     async with balancer_session.post("/balancer/update_file_info", json={
         "id": file_id,
