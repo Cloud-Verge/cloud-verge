@@ -4,6 +4,7 @@ from pydantic import BaseModel
 class UploadDemand(BaseModel):
     size: int
     user_token: str
+    file_id: str
 
 
 class DownloadDemand(BaseModel):

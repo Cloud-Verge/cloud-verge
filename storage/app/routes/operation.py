@@ -2,6 +2,7 @@ import os
 import uuid
 
 import aiofiles
+import aiohttp
 
 from fastapi import APIRouter, Depends, Request, UploadFile, File
 from fastapi.responses import JSONResponse, FileResponse
@@ -13,7 +14,7 @@ from app.config import AppConfig
 from app.models.file import FileEntry
 
 from app.utils.caches import downloads_cache, uploads_cache
-from app.utils.depends import on_db_session
+from app.utils.depends import on_db_session, on_balancer_session
 from app.utils.validations import get_token
 
 router = APIRouter()
@@ -25,6 +26,7 @@ async def put_upload(
     request_id: str,
     file: UploadFile = File(),
     db_session: AsyncSession = Depends(on_db_session),
+    balancer_session: aiohttp.ClientSession = Depends(on_balancer_session),
 ):
     if request_id not in uploads_cache:
         return JSONResponse({
@@ -67,12 +69,23 @@ async def put_upload(
             "message": "File size exceeds expected size",
         }, status_code=400)
 
-    file_id = str(uuid.uuid4())
+    file_id = upload.file_id
     async with db_session.begin():
         db_session.add(
             FileEntry(id=file_id, filename=file.filename, local_path=local_path)
         )
         await db_session.commit()
+
+    async with balancer_session.post("/balancer/update_file_info", json={
+        "id": file_id,
+        "location": config.location,
+        "filename": file.filename,
+        "operation": "ADD",
+    }) as resp:
+        result = await resp.json()
+        if result["status"] != "ok":
+            os.remove(local_path)
+            return JSONResponse(result, status_code=resp.status)
 
     uploads_cache.pop(request_id)
 
