@@ -17,28 +17,18 @@ def main():
 
     token = args.token if args.token else os.getenv("CLOUD_VERGE_TOKEN")
     if not token:
-        print("Cloud Verge token not found. Either env variable \"CLOUD_VERGE_TOKEN\" or --token param must be provided", file=sys.stderr)
-        exit(1)
+        print("OAuth token not found, trying to download anonimously")
 
     url = args.url.removesuffix('/')
     headers = {
         "Authorization": "OAuth " + token
     }
 
-    resp = requests.post(
-        url + "/files/ask_download",
-        json={"file_id": args.file_id},
-        headers=headers,
-    )
-    if resp.status_code != 200:
-        print(f"[{resp.status_code}] Something went wrong:", resp.json()["message"], file=sys.stderr)
-        exit(1)
-
-    print("Downloading the file...")
     resp = requests.get(
-        resp.json()["url"],
+        url + f"/files/download/{args.file_id}",
         headers=headers,
         stream=True,
+        allow_redirects=True
     )
     if resp.status_code != 200:
         print(f"[{resp.status_code}] Something went wrong:", resp.json()["message"], file=sys.stderr)
