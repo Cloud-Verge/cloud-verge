@@ -17,7 +17,7 @@ router = APIRouter()
 
 class AskUploadModel(BaseModel):
     size: int
-    access: Literal["PRIVATE", "PUBLIC"] = "PRIVATE"
+    access: Literal["PUBLIC"] = "PUBLIC"
 
 
 class AskDownloadModel(BaseModel):
