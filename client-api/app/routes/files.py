@@ -41,7 +41,6 @@ async def post_ask_upload(
 
     async with storage_session.post("/demands/upload", json={
         "size": data.size,
-        "access": data.access,
         "user_token": user.oauth_token,
     }) as resp:
         base_url = str(resp.url).removesuffix("/demands/upload")
