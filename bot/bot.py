@@ -86,24 +86,25 @@ async def handle_file(message: types.Message):
     else:
         await message.reply(f"Success! Download link: {url + '/files/download/' + resp['json']['file_id']}")
 
-def make_message(resp):
-    ans = ''
-    for item in resp:
-        ans += item['item_id'] + '\n'
-    return ans
+# def make_message(resp):
+#     print(resp['result'])
+#     ans = ''
+#     for item in resp['result']:
+#         ans += item['file_id'] + '\n'
+#     return ans
 
-@dp.message_handler(commands=['list'])
-async def handle_list(message: types.Message):
-    headers = {
-        "Authorization": "OAuth " + os.getenv("USER_TOKEN")
-    }
-    url = os.getenv("BOT_REQUEST_URL")
-    url = url.removesuffix('/')
-    resp = await async_get(
-        url + '/files/list',
-        headers=headers
-    )
-    await message.reply(make_message(list(resp['text'])))
+# @dp.message_handler(commands=['list'])
+# async def handle_list(message: types.Message):
+#     headers = {
+#         "Authorization": "OAuth " + os.getenv("USER_TOKEN")
+#     }
+#     url = os.getenv("BOT_REQUEST_URL")
+#     url = url.removesuffix('/')
+#     resp = await async_get(
+#         url + '/files/list',
+#         headers=headers
+#     )
+#     await message.reply(make_message(eval(resp['text'])))
 
 
 if __name__ == '__main__':
