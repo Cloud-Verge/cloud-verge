@@ -1,5 +1,7 @@
 import datetime
 
+from typing import Sequence
+
 from sqlalchemy import DateTime
 from sqlalchemy.sql import func
 from sqlalchemy.orm import Mapped, mapped_column
@@ -13,7 +15,7 @@ class FileEntry(Base):
     id: Mapped[str] = mapped_column(primary_key=True, index=True)
     owner: Mapped[int] = mapped_column(nullable=False, index=True)
     filename: Mapped[str] = mapped_column(nullable=True)
-    locations: Mapped[list[str]] = mapped_column(nullable=False)
+    locations: Mapped[Sequence[str]] = mapped_column(nullable=False)
     created_at: Mapped[datetime.datetime] = mapped_column(
         DateTime(timezone=False), server_default=func.now()
     )
