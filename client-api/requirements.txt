@@ -1,2 +1,4 @@
-fastapi~=0.103.2
-sqlalchemy~=2.0.22
+aiohttp
+fastapi
+sqlalchemy
+psycopg2-binary

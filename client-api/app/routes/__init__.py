@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 
-from .example import router as common_router
+from .files import router as files_routes
 
 router = APIRouter()
 
-router.include_router(common_router, prefix='/api')
+router.include_router(files_routes, prefix='/files')

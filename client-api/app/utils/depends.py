@@ -1,14 +1,11 @@
+from aiohttp import ClientSession
+
 from sqlalchemy.ext.asyncio import AsyncEngine
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 
-from sqlalchemy.engine.url import URL
+from app.config import AppConfig
 
-engine: AsyncEngine = None
-
-
-def init_database(url: str | URL, **kw):
-    global engine
-    engine = create_async_engine(url, **kw)
+engine: AsyncEngine = create_async_engine(AppConfig().sql_engine_url)
 
 
 async def on_db_session():
@@ -18,11 +15,21 @@ async def on_db_session():
         ...
     """
 
-    if engine is None:
-        raise RuntimeError(
-            "SQLAlchemy engine is not initialized. Call init_database(url) to initialize"
-        )
-
     session_fabric = async_sessionmaker(engine, expire_on_commit=False)
     async with session_fabric() as session:
+        yield session
+
+
+async def on_storage_session():
+    """Usage:
+    @app.get('/method/')
+    async def method(session: aiohttp.ClientSession = Depends(on_storage_session))
+        ...
+    """
+
+    config = AppConfig()
+    async with ClientSession(base_url=config.storage_url, headers={
+        "Authorization": "OAuth " + config.storage_token,
+        "User-Agent": "CloudVerge Node",
+    }) as session:
         yield session
