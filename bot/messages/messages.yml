@@ -1,1 +1,1 @@
-help: "Upload file to bot to get its ID,\nUse /download ID to download file"
+help: "Upload file to bot to get its ID,\nUse /link ID to get download link\nUse /list to get hosted files"

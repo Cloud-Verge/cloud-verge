@@ -7,6 +7,7 @@ from aiogram.contrib.middlewares.logging import LoggingMiddleware
 import os
 import aiohttp
 import uuid
+from async_requests.async_requests import *
 
 logging.basicConfig(level=logging.INFO)
 
@@ -36,73 +37,35 @@ async def ask_upload(url, path, token):
         "Authorization": "OAuth " + token
     }
 
-    async with aiohttp.ClientSession() as session:
-        resp = await session.post(
-            url + "/files/ask_upload",
-            json={"size": os.path.getsize(path)},
-            headers=headers,
-        )
+    resp = await async_post(
+        url + "/files/ask_upload",
+        json={"size": os.path.getsize(path)},
+        headers=headers
+    )
 
-        if resp.status != 200:
-            return resp
+    if resp['status'] != 200:
+        return resp
 
-        upload_url = (await resp.json())["url"]
+    upload_url = resp['json']["url"]
+    return await async_upload_file(upload_url, path, headers=headers)
 
-        async with aiohttp.ClientSession(headers=headers) as session:
-            with open(path, "rb") as file:
-                form_data = aiohttp.FormData()
-                form_data.add_field("file", file, filename=os.path.basename(path))
-                resp = await session.put(upload_url, data=form_data)
 
-                return resp
-
-async def ask_download(url, file_id, token, path=None):
+async def ask_download_link(url, file_id, token):
     headers = {
         "Authorization": "OAuth " + token
     }
 
-    async with aiohttp.ClientSession() as session:
-        resp = await session.post(
-            url + "/files/ask_download",
-            json={"file_id": file_id},
-            headers=headers,
-        )
-
-        if resp.status != 200:
-            print(f"[{resp.status}] Something went wrong:", (await resp.json())["message"])
-            return resp, None
-
-        print("Downloading the file...")
-        download_url = (await resp.json())["url"]
-        
-        resp = await session.get(
-            download_url,
-            headers=headers,
-        )
-
-        if resp.status != 200:
-            print(f"[{resp.status}] Something went wrong:", (await resp.json())["message"])
-            return resp, None
-
-        full_path = path
-        disp = resp.headers.get("Content-Disposition", "")
-        if "filename=" in disp:
-            path = disp.split("filename=")[-1].strip('"')
-        else:
-            path = str(uuid.uuid4()) + '.bin'
-        full_path = os.path.join(full_path, path)
-
-        with open(full_path, "wb") as f:
-            while chunk := await resp.content.read(16 * 1024):
-                f.write(chunk)
-        return resp, full_path
-
+    resp = await async_post(
+        url + "/files/ask_download",
+        json = {"file_id": file_id},
+        headers=headers
+    )
+    return resp
 
 
 @dp.message_handler(content_types=['document'])
 async def handle_file(message: types.Message):
     file_id = message.document.file_id
-
     file = await bot.get_file(file_id)
 
     file_name = file.file_path.split('/')[-1]
@@ -113,26 +76,44 @@ async def handle_file(message: types.Message):
     url = os.getenv("BOT_REQUEST_URL")
     url = url.removesuffix('/')
     resp = await ask_upload(url, file_path, os.getenv("USER_TOKEN"))
-    json = await resp.json()
 
-    if resp.status != 200:
-        await message.reply(f'[{resp.status}] Something went wrong: {json["message"]}')
+    if resp['status'] != 200:
+        await message.reply(f'[{resp["status"]}] Something went wrong: {resp["json"]["message"]}')
     else:
-        await message.reply(f"Success! File ID: {json['file_id']}")
+        await message.reply(f"Success! File ID: {resp['json']['file_id']}")
 
-@dp.message_handler(commands=['download'])
+@dp.message_handler(commands=['link'])
 async def handle_download(message: types.Message):
     file_id = message.text.split(' ')[-1]
     print(file_id)
     url = os.getenv("BOT_REQUEST_URL")
     url = url.removesuffix('/')
-    resp, path = await ask_download(url, file_id, os.getenv("USER_TOKEN"), os.getenv("BOT_FILES_PATH"))
-    print("Finished! Result path:", path)
-    if resp.status != 200:
+    resp = await ask_download_link(url, file_id, os.getenv("USER_TOKEN"))
+
+    if resp['status'] != 200:
         await message.reply("Something went wrong")
     else:
-        with open(path, "rb") as file:
-            await message.reply_document(document=file, caption="Requested file")
+        await message.reply(f"Download link: {resp['json']['url']}")
+
+def make_message(resp):
+    ans = ''
+    for item in resp:
+        ans += item['item_id'] + '\n'
+    return ans
+
+@dp.message_handler(commands=['list'])
+async def handle_list(message: types.Message):
+    headers = {
+        "Authorization": "OAuth " + os.getenv("USER_TOKEN")
+    }
+    url = os.getenv("BOT_REQUEST_URL")
+    url = url.removesuffix('/')
+    resp = await async_get(
+        url + '/files/list',
+        headers=headers
+    )
+    await message.reply(make_message(list(resp['text'])))
+
 
 if __name__ == '__main__':
     executor.start_polling(dp, on_startup=on_startup, on_shutdown=on_shutdown)
