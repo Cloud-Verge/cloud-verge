@@ -39,15 +39,19 @@ async def ask_upload(url, path, token):
 
     resp = await async_post(
         url + "/files/ask_upload",
-        json={"size": os.path.getsize(path)},
+        json={
+            "size": os.path.getsize(path),
+            "access": "PUBLIC"
+        },
         headers=headers
     )
 
     if resp['status'] != 200:
         return resp
 
-    upload_url = resp['json']["url"]
-    return await async_upload_file(upload_url, path, headers=headers)
+    resp = await async_upload_file_put(resp['json']['url'], path, headers=headers)
+
+    return resp
 
 
 async def ask_download_link(url, file_id, token):
@@ -78,22 +82,9 @@ async def handle_file(message: types.Message):
     resp = await ask_upload(url, file_path, os.getenv("USER_TOKEN"))
 
     if resp['status'] != 200:
-        await message.reply(f'[{resp["status"]}] Something went wrong: {resp["json"]["message"]}')
+        await message.reply(f'[{resp["status"]}] Something went wrong: {resp["text"]}')
     else:
-        await message.reply(f"Success! File ID: {resp['json']['file_id']}")
-
-@dp.message_handler(commands=['link'])
-async def handle_download(message: types.Message):
-    file_id = message.text.split(' ')[-1]
-    print(file_id)
-    url = os.getenv("BOT_REQUEST_URL")
-    url = url.removesuffix('/')
-    resp = await ask_download_link(url, file_id, os.getenv("USER_TOKEN"))
-
-    if resp['status'] != 200:
-        await message.reply("Something went wrong")
-    else:
-        await message.reply(f"Download link: {resp['json']['url']}")
+        await message.reply(f"Success! Download link: {url + '/files/download/' + resp['json']['file_id']}")
 
 def make_message(resp):
     ans = ''
