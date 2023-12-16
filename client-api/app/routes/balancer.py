@@ -44,10 +44,12 @@ async def update_file_info(
                 "message": "Requested file ID not found",
             }, status_code=404)
 
-        if data.operation == "ADD" and data.location not in file.locations:
+        if data.operation == "ADD":
             if data.filename:
                 file.filename = data.filename
-            file.locations.append(data.location)
+            if data.location not in file.locations:
+                file.locations.append(data.location)
+                print("Updated:", file.locations)
         elif data.operation == "DELETE" and data.location in file.locations:
             file.locations.remove(data.location)
         await db_session.commit()
