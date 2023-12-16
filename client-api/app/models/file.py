@@ -15,5 +15,5 @@ class FileEntry(Base):
     filename: Mapped[str] = mapped_column(nullable=True)
     locations: Mapped[list[str]] = mapped_column(nullable=False)
     created_at: Mapped[datetime.datetime] = mapped_column(
-        DateTime(timezone=False), server_default=func.now
+        DateTime(timezone=False), server_default=func.now()
     )
