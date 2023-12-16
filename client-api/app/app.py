@@ -1,11 +1,18 @@
 from fastapi import FastAPI
 
-from config import AppCofig
-from routes import router
+from app.models.base import Base
+from app.routes import router
+from app.utils.depends import engine
 
 
-def create_app(config: AppCofig) -> FastAPI:
+async def on_startup():
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+
+
+def create_app() -> FastAPI:
     app = FastAPI(
-        routes=router.routes
+        routes=router.routes,
+        on_startup=[on_startup],
     )
     return app
