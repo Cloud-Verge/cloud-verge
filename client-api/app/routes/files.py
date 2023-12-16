@@ -4,7 +4,7 @@ import aiohttp
 from aiohttp.client_exceptions import ClientConnectionError
 
 from fastapi import APIRouter, Depends, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 
 from typing import Literal
 from pydantic import BaseModel
@@ -21,11 +21,7 @@ router = APIRouter()
 
 class AskUploadModel(BaseModel):
     size: int
-    access: Literal["PUBLIC"] = "PUBLIC"
-
-
-class AskDownloadModel(BaseModel):
-    file_id: str
+    access: Literal["PRIVATE", "PUBLIC"] = "PUBLIC"
 
 
 @router.post("/ask_upload")
@@ -54,10 +50,12 @@ async def post_ask_upload(
         if result["status"] != "ok":
             return JSONResponse(result, status_code=resp.status)
 
+    file_access = 0 if data.access == "PUBLIC" else -1
     async with db_session.begin():
         db_session.add(FileEntry(
             id=file_id,
             owner=user.id,
+            access=file_access,
             locations=[]
         ))
         await db_session.commit()
@@ -68,25 +66,39 @@ async def post_ask_upload(
     })
 
 
-@router.post("/ask_download")
-async def post_ask_download(
+@router.get("/download/{file_id}")
+async def get_download(
     request: Request,
-    data: AskDownloadModel,
+    file_id: str,
     db_session: AsyncSession = Depends(on_db_session),
     storage_session: aiohttp.ClientSession = Depends(on_storage_session),
 ):
     async with db_session.begin():
-        user = await parse_user(db_session, request.headers)
-        if user is None:
+        file = await db_session.execute(
+            select(FileEntry).where(FileEntry.id == file_id)
+        )
+        file = file.scalar_one_or_none()
+        if file is None:
             return JSONResponse({
                 "status": "error",
-                "message": "Authorization failed",
-            }, status_code=401)
+                "message": "File not found",
+            }, status_code=404)
+
+        if file.access != 0:
+            user = await parse_user(db_session, request.headers)
+            if user is None or user.id != file.owner:
+                return JSONResponse({
+                    "status": "error",
+                    "message": "Access denied",
+                }, status_code=401)
+            user_token = user.oauth_token
+        else:
+            user_token = None
 
     try:
         async with storage_session.post("/demands/download", json={
-            "file_id": data.file_id,
-            "user_token": user.oauth_token,
+            "file_id": file_id,
+            "user_token": user_token,
         }) as resp:
             base_url = str(resp.url).removesuffix("/demands/download")
             result = await resp.json()
@@ -98,10 +110,7 @@ async def post_ask_download(
                 "message": "Unable to contact storage",
             }, status_code=500)
 
-    return JSONResponse({
-        "status": "ok",
-        "url": base_url + result["url"],
-    })
+    return RedirectResponse(base_url + result["url"])
 
 
 @router.get("/list")
