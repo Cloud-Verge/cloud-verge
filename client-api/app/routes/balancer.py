@@ -6,6 +6,7 @@ from pydantic import BaseModel
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm.attributes import flag_modified
 
 from app.models.file import FileEntry
 from app.utils.depends import on_db_session
@@ -49,9 +50,9 @@ async def update_file_info(
                 file.filename = data.filename
             if data.location not in file.locations:
                 file.locations.append(data.location)
-                print("Updated:", file.locations)
         elif data.operation == "DELETE" and data.location in file.locations:
             file.locations.remove(data.location)
+        flag_modified(file, "locations")
         await db_session.commit()
 
     return JSONResponse({"status": "ok"})
