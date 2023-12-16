@@ -50,5 +50,6 @@ async def update_file_info(
             file.locations.append(data.location)
         elif data.operation == "DELETE" and data.location in file.locations:
             file.locations.remove(data.location)
+        await db_session.commit()
 
     return JSONResponse({"status": "ok"})
