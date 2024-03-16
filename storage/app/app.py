@@ -9,16 +9,14 @@ from app.utils.depends import engine
 
 
 async def on_startup():
-    if not os.path.isdir(AppConfig().local_folder):
-        os.makedirs(AppConfig().local_folder)
+    if not os.path.isdir(AppConfig.LOCAL_FOLDER):
+        os.makedirs(AppConfig.LOCAL_FOLDER)
 
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
 
-def create_app() -> FastAPI:
-    app = FastAPI(
-        routes=router.routes,
-        on_startup=[on_startup],
-    )
-    return app
+app = FastAPI(
+    routes=router.routes,
+    on_startup=[on_startup],
+)

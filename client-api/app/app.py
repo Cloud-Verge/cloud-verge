@@ -10,9 +10,7 @@ async def on_startup():
         await conn.run_sync(Base.metadata.create_all)
 
 
-def create_app() -> FastAPI:
-    app = FastAPI(
-        routes=router.routes,
-        on_startup=[on_startup],
-    )
-    return app
+app = FastAPI(
+    routes=router.routes,
+    on_startup=[on_startup],
+)

@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 
 from app.config import AppConfig
 
-engine: AsyncEngine = create_async_engine(AppConfig().sql_engine_url)
+engine: AsyncEngine = create_async_engine(AppConfig.SQL_ENGINE_URI)
 
 
 async def on_db_session():
@@ -27,9 +27,8 @@ async def on_storage_session():
         ...
     """
 
-    config = AppConfig()
-    async with ClientSession(base_url=config.storage_url, headers={
-        "Authorization": "OAuth " + config.storage_token,
+    async with ClientSession(base_url=AppConfig.STORAGE_URL, headers={
+        "Authorization": "OAuth " + AppConfig.STORAGE_TOKEN,
         "User-Agent": "CloudVerge Node",
     }) as session:
         yield session

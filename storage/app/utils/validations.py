@@ -13,5 +13,5 @@ def get_token(headers: Headers) -> str | None:
 def check_admin_auth(headers: Headers) -> bool:
     method, data = headers.get("Authorization", "NO None").split(maxsplit=1)
     if method == "OAuth":
-        return data == AppConfig().admin_token
+        return data == AppConfig.ADMIN_TOKEN
     return False

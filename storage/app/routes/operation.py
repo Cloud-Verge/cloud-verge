@@ -50,9 +50,8 @@ async def put_upload(
             "message": "File size exceeds expected size",
         }, status_code=400)
 
-    config = AppConfig()
-    chunk_size = config.chunk_size * 1024
-    local_path = os.path.join(config.local_folder, str(uuid.uuid4()))
+    chunk_size = AppConfig.CHUNK_SIZE * 1024
+    local_path = os.path.join(AppConfig.LOCAL_FOLDER, str(uuid.uuid4()))
 
     space_used = 0
     async with aiofiles.open(local_path, "wb+") as f:
@@ -78,7 +77,7 @@ async def put_upload(
 
     async with balancer_session.post("/balancer/update_file_info", json={
         "id": file_id,
-        "location": config.location,
+        "location": AppConfig.LOCATION,
         "filename": file.filename,
         "operation": "ADD",
     }) as resp:

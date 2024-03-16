@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:13.3-alpine
+    environment:
+      POSTGRES_DB: "cv_storage_db"
+      POSTGRES_USER: "pguser"
+      POSTGRES_PASSWORD: "POSTGRES_PASSWORD"
+    ports:
+      - "34175:5432"
+    volumes:
+      - ./init-db:/docker-entrypoint-initdb.d
+      - postgres_data:/var/lib/postgresql/data
+      - /mnt/vdb1/cv-storage:/storage
+
+  client-api:
+    build: .
+    ports:
+      - "5011:5000"
+    environment:
+      LOCAL_FOLDER: "/storage"
+      SQL_ENGINE_URI: "postgresql+asyncpg://pguser:POSTGRES_PASSWORD@db/cv_storage_db"
+      BALANCER_URL: "http://localhost:5010"
+      BALANCER_TOKEN: "CLIENT_API_ADMIN_TOKEN"
+      ADMIN_TOKEN: "STORAGE_ADMIN_TOKEN"
+      CHUNK_SIZE: 128
+    depends_on:
+      - db
+
+volumes:
+  postgres_data:
