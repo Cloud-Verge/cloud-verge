@@ -45,7 +45,6 @@ async def post_ask_download(
 
     request_id = str(uuid.uuid4())
     downloads_cache[request_id] = data
-    print(downloads_cache[request_id], flush=True)
 
     return JSONResponse({
         "status": "ok",

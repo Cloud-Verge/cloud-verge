@@ -109,8 +109,6 @@ async def get_download(
 
     file_id = download.file_id
     expected_token = download.user_token
-    print("Expected:", expected_token, flush=True)
-    print("Real:", get_token(request.headers), flush=True)
 
     if expected_token and get_token(request.headers) != expected_token:
         return JSONResponse({
