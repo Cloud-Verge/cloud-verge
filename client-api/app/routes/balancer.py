@@ -8,9 +8,9 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm.attributes import flag_modified
 
-from app.models.file import FileEntry
-from app.utils.depends import on_db_session
-from app.utils.validations import check_admin_auth
+from models.file import FileEntry
+from utils.depends import on_db_session
+from utils.validations import check_admin_auth
 
 router = APIRouter()
 

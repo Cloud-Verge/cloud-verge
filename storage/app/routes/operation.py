@@ -10,12 +10,12 @@ from fastapi.responses import JSONResponse, FileResponse
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.config import AppConfig
-from app.models.file import FileEntry
+from config import AppConfig
+from models.file import FileEntry
 
-from app.utils.caches import downloads_cache, uploads_cache
-from app.utils.depends import on_db_session, on_balancer_session
-from app.utils.validations import get_token
+from utils.caches import downloads_cache, uploads_cache
+from utils.depends import on_db_session, on_balancer_session
+from utils.validations import get_token
 
 router = APIRouter()
 
@@ -109,6 +109,8 @@ async def get_download(
 
     file_id = download.file_id
     expected_token = download.user_token
+    print("Expected:", expected_token, flush=True)
+    print("Real:", get_token(request.headers), flush=True)
 
     if expected_token and get_token(request.headers) != expected_token:
         return JSONResponse({

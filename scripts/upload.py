@@ -10,7 +10,7 @@ def main():
     parser = argparse.ArgumentParser(description="Tool for uploading files to CloudVerge")
 
     parser.add_argument("--file", "-f", help="Path to the file", metavar='PATH', required=True)
-    parser.add_argument("--url", "-b", help="HTTP base url to client-api server", default="http://localhost:8000")
+    parser.add_argument("--url", "-b", help="HTTP base url to client-api server", default="http://localhost:5010")
     parser.add_argument("--token", "-t", help="OAuth token of your account", metavar='OAUTH', default='')
     parser.add_argument("--public", "-p", help="If set, the uploaded file will be publicly accessible", action="store_true")
     args = parser.parse_args()

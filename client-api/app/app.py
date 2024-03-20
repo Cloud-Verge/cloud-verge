@@ -1,8 +1,8 @@
 from fastapi import FastAPI
 
-from app.models.base import Base
-from app.routes import router
-from app.utils.depends import engine
+from models.base import Base
+from routes import router
+from utils.depends import engine
 
 
 async def on_startup():

@@ -1,6 +1,6 @@
 import os
 
-from app.utils.common import Singleton
+from utils.common import Singleton
 
 
 class AppConfig(metaclass=Singleton):

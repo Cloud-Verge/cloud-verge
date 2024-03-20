@@ -8,22 +8,22 @@ services:
       POSTGRES_USER: "pguser"
       POSTGRES_PASSWORD: "POSTGRES_PASSWORD"
     ports:
-      - "34175:5432"
+      - "34176:5432"
     volumes:
-      - ./init-db:/docker-entrypoint-initdb.d
       - postgres_data:/var/lib/postgresql/data
-      - /mnt/vdb1/cv-storage:/storage
+      - /Users/shufl9dka/cv-storage:/storage
 
   client-api:
     build: .
     ports:
       - "5011:5000"
     environment:
-      LOCAL_FOLDER: "/storage"
       SQL_ENGINE_URI: "postgresql+asyncpg://pguser:POSTGRES_PASSWORD@db/cv_storage_db"
-      BALANCER_URL: "http://localhost:5010"
-      BALANCER_TOKEN: "CLIENT_API_ADMIN_TOKEN"
+      LOCATION: "http://host.docker.internal:5011"
       ADMIN_TOKEN: "STORAGE_ADMIN_TOKEN"
+      LOCAL_FOLDER: "/storage"
+      BALANCER_URL: "http://host.docker.internal:5010"
+      BALANCER_TOKEN: "CLIENT_API_ADMIN_TOKEN"
       CHUNK_SIZE: 128
     depends_on:
       - db

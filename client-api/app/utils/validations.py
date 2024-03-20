@@ -3,8 +3,8 @@ from starlette.datastructures import Headers
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.config import AppConfig
-from app.models.user import UserData
+from config import AppConfig
+from models.user import UserData
 
 
 async def parse_user(db: AsyncSession, headers: Headers) -> UserData | None:

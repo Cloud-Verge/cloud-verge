@@ -12,9 +12,9 @@ from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.file import FileEntry
-from app.utils.depends import on_db_session, on_storage_session
-from app.utils.validations import parse_user
+from models.file import FileEntry
+from utils.depends import on_db_session, on_storage_session
+from utils.validations import parse_user
 
 router = APIRouter()
 
@@ -46,6 +46,7 @@ async def post_ask_upload(
         "file_id": file_id,
     }) as resp:
         base_url = str(resp.url).removesuffix("/demands/upload")
+        base_url = base_url.replace("host.docker.internal", "localhost")
         result = await resp.json()
         if result["status"] != "ok":
             return JSONResponse(result, status_code=resp.status)
@@ -101,6 +102,7 @@ async def get_download(
             "user_token": user_token,
         }) as resp:
             base_url = str(resp.url).removesuffix("/demands/download")
+            base_url = base_url.replace("host.docker.internal", "localhost")
             result = await resp.json()
             if result["status"] != "ok":
                 return JSONResponse(result, status_code=resp.status)

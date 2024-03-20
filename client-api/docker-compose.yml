@@ -10,7 +10,6 @@ services:
     ports:
       - "34175:5432"
     volumes:
-      - ./init-db:/docker-entrypoint-initdb.d
       - postgres_data:/var/lib/postgresql/data
 
   client-api:
@@ -19,9 +18,9 @@ services:
       - "5010:5000"
     environment:
       SQL_ENGINE_URI: "postgresql+asyncpg://pguser:POSTGRES_PASSWORD@db/client_api_db"
-      STORAGE_URL: "http://localhost:5011"
-      STORAGE_TOKEN: "STORAGE_ADMIN_TOKEN"
       ADMIN_TOKEN: "CLIENT_API_ADMIN_TOKEN"
+      STORAGE_URL: "http://host.docker.internal:5011"
+      STORAGE_TOKEN: "STORAGE_ADMIN_TOKEN"
     depends_on:
       - db
 

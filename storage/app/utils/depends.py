@@ -3,7 +3,7 @@ from aiohttp import ClientSession
 from sqlalchemy.ext.asyncio import AsyncEngine
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 
-from app.config import AppConfig
+from config import AppConfig
 
 engine: AsyncEngine = create_async_engine(AppConfig.SQL_ENGINE_URI)
 

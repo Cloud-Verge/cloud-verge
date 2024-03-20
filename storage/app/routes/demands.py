@@ -3,11 +3,11 @@ import uuid
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
 
-from app.utils.caches import \
+from utils.caches import \
     DownloadDemand, downloads_cache, \
     UploadDemand, uploads_cache
 
-from app.utils.validations import check_admin_auth
+from utils.validations import check_admin_auth
 
 router = APIRouter()
 
@@ -45,6 +45,7 @@ async def post_ask_download(
 
     request_id = str(uuid.uuid4())
     downloads_cache[request_id] = data
+    print(downloads_cache[request_id], flush=True)
 
     return JSONResponse({
         "status": "ok",
