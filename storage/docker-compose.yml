@@ -11,7 +11,7 @@ services:
       - "34176:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - /Users/shufl9dka/cv-storage:/storage
+      - /mnt/vdb1/cv-storage:/storage
 
   storage:
     build: .
