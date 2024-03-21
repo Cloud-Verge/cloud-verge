@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  db:
+  storage-db:
     image: postgres:13.3-alpine
     environment:
       POSTGRES_DB: "cv_storage_db"
@@ -13,12 +13,12 @@ services:
       - postgres_data:/var/lib/postgresql/data
       - /mnt/vdb1/cv-storage:/storage
 
-  storage:
+  storage-app:
     build: .
     ports:
       - "5011:5000"
     environment:
-      SQL_ENGINE_URI: "postgresql+asyncpg://pguser:POSTGRES_PASSWORD@db/cv_storage_db"
+      SQL_ENGINE_URI: "postgresql+asyncpg://pguser:POSTGRES_PASSWORD@storage-db/cv_storage_db"
       LOCATION: "http://host.docker.internal:5011"
       ADMIN_TOKEN: "STORAGE_ADMIN_TOKEN"
       LOCAL_FOLDER: "/storage"
@@ -26,7 +26,9 @@ services:
       BALANCER_TOKEN: "CLIENT_API_ADMIN_TOKEN"
       CHUNK_SIZE: 128
     depends_on:
-      - db
+      - storage-db
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
 volumes:
   postgres_data:
