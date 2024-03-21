@@ -26,22 +26,14 @@ def main():
         "Authorization": "OAuth " + args.token
     }
 
-    resp = requests.post(
-        url + "/files/ask_upload",
+    resp = requests.put(
+        url + "/files/upload",
         json={
-            "size": os.path.getsize(path),
             "access": "PUBLIC" if args.public else "PRIVATE",
         },
-        headers=headers,
-    )
-    if resp.status_code != 200:
-        print(f"[{resp.status_code}] Something went wrong:", resp.json()["message"], file=sys.stderr)
-        exit(1)
-
-    resp = requests.put(
-        resp.json()["url"],
         files={"file": open(path, "rb")},
         headers=headers,
+        allow_redirects=True
     )
     if resp.status_code != 200:
         print(f"[{resp.status_code}] Something went wrong:", resp.json()["message"], file=sys.stderr)

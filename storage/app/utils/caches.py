@@ -3,14 +3,13 @@ from pydantic import BaseModel
 
 
 class UploadDemand(BaseModel):
-    size: int
-    user_token: str
     file_id: str
+    user_auth: str
 
 
 class DownloadDemand(BaseModel):
     file_id: str
-    user_token: Optional[str]
+    user_auth: Optional[str]
 
 
 uploads_cache: dict[str, UploadDemand] = dict()

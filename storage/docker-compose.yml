@@ -13,7 +13,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
       - /Users/shufl9dka/cv-storage:/storage
 
-  client-api:
+  storage:
     build: .
     ports:
       - "5011:5000"

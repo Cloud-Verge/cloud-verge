@@ -35,22 +35,14 @@ async def put_upload(
         }, status_code=404)
     upload = uploads_cache[request_id]
 
-    expected_size = upload.size
-    expected_token = upload.user_token
-
-    if get_token(request.headers) != expected_token:
+    if request.cookies.get("tmp-storage-auth") != upload.user_auth:
         return JSONResponse({
             "status": "error",
             "message": "Authorization failed",
         }, status_code=401)
 
-    if file.size and file.size > expected_size:
-        return JSONResponse({
-            "status": "error",
-            "message": "File size exceeds expected size",
-        }, status_code=400)
-
     chunk_size = AppConfig.CHUNK_SIZE * 1024
+    expected_size = chunk_size * 1024 * 1024  # may vary
     local_path = os.path.join(AppConfig.LOCAL_FOLDER, str(uuid.uuid4()))
 
     space_used = 0
@@ -108,9 +100,8 @@ async def get_download(
     download = downloads_cache[request_id]
 
     file_id = download.file_id
-    expected_token = download.user_token
 
-    if expected_token and get_token(request.headers) != expected_token:
+    if request.cookies.get("tmp-storage-auth") != download.user_auth:
         return JSONResponse({
             "status": "error",
             "message": "Authorization failed",

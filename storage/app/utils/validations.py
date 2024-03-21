@@ -4,7 +4,6 @@ from config import AppConfig
 
 
 def get_token(headers: Headers) -> str | None:
-    print("HEADERS:", dict(headers), flush=True)
     method, data = headers.get("Authorization", "NO None").split(maxsplit=1)
     if method == "OAuth":
         return data

@@ -7,7 +7,6 @@ from fastapi import APIRouter, Depends, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 
 from typing import Literal
-from pydantic import BaseModel
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -19,15 +18,10 @@ from utils.validations import parse_user
 router = APIRouter()
 
 
-class AskUploadModel(BaseModel):
-    size: int
-    access: Literal["PRIVATE", "PUBLIC"] = "PUBLIC"
-
-
-@router.post("/ask_upload")
-async def post_ask_upload(
+@router.put("/upload")
+async def put_upload(
     request: Request,
-    data: AskUploadModel,
+    access: Literal["PRIVATE", "PUBLIC"] = "PUBLIC",
     db_session: AsyncSession = Depends(on_db_session),
     storage_session: aiohttp.ClientSession = Depends(on_storage_session),
 ):
@@ -40,9 +34,9 @@ async def post_ask_upload(
             }, status_code=401)
 
     file_id = str(uuid.uuid4())
+    user_auth = str(uuid.uuid4())
     async with storage_session.post("/demands/upload", json={
-        "size": data.size,
-        "user_token": user.oauth_token,
+        "user_auth": user_auth,
         "file_id": file_id,
     }) as resp:
         base_url = str(resp.url).removesuffix("/demands/upload")
@@ -51,7 +45,7 @@ async def post_ask_upload(
         if result["status"] != "ok":
             return JSONResponse(result, status_code=resp.status)
 
-    file_access = 0 if data.access == "PUBLIC" else -1
+    file_access = 0 if access == "PUBLIC" else -1
     async with db_session.begin():
         db_session.add(FileEntry(
             id=file_id,
@@ -61,10 +55,15 @@ async def post_ask_upload(
         ))
         await db_session.commit()
 
-    return JSONResponse({
-        "status": "ok",
-        "url": base_url + result["url"],
-    })
+    domain = base_url.removeprefix("http://").removeprefix("https://").split(":", maxsplit=1)[0]
+
+    resp = RedirectResponse(base_url + result["url"])
+    resp.set_cookie(
+        "tmp-storage-auth", user_auth,
+        domain=domain if domain != "localhost" else None,
+        max_age=360, httponly=True,
+    )
+    return resp
 
 
 @router.get("/download/{file_id}")
@@ -92,14 +91,13 @@ async def get_download(
                     "status": "error",
                     "message": "Access denied",
                 }, status_code=401)
-            user_token = user.oauth_token
-        else:
-            user_token = None
+
+    user_auth = str(uuid.uuid4())
 
     try:
         async with storage_session.post("/demands/download", json={
             "file_id": file_id,
-            "user_token": user_token,
+            "user_auth": user_auth,
         }) as resp:
             base_url = str(resp.url).removesuffix("/demands/download")
             base_url = base_url.replace("host.docker.internal", "localhost")
@@ -112,7 +110,15 @@ async def get_download(
                 "message": "Unable to contact storage",
             }, status_code=500)
 
-    return RedirectResponse(base_url + result["url"])
+    domain = base_url.removeprefix("http://").removeprefix("https://").split(":", maxsplit=1)[0]
+
+    resp = RedirectResponse(base_url + result["url"])
+    resp.set_cookie(
+        "tmp-storage-auth", user_auth,
+        domain=domain if domain != "localhost" else None,
+        max_age=360, httponly=True,
+    )
+    return resp
 
 
 @router.get("/list")
