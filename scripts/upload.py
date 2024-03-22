@@ -36,7 +36,8 @@ def main():
         )
         if resp.status_code != 200:
             print(f"[{resp.status_code}] Something went wrong:", resp.text, file=sys.stderr)
-        resp = requests.put(
+
+        resp = session.put(
             resp.json()["url"],
             files={"file": open(path, "rb")},
             headers=headers,
