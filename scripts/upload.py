@@ -42,7 +42,7 @@ def main():
             headers=headers,
         )
         if resp.status_code != 200:
-            print(f"[{resp.status_code}] Something went wrong:", resp.json()["message"], file=sys.stderr)
+            print(f"[{resp.status_code}] Something went wrong:", resp.text, file=sys.stderr)
             exit(1)
         resp = resp.json()
 
