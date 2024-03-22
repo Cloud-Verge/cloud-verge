@@ -18,10 +18,10 @@ from utils.validations import parse_user
 router = APIRouter()
 
 
-@router.put("/upload")
-async def put_upload(
+@router.get("/upload_link")
+async def get_upload_link(
     request: Request,
-    access: Literal["PRIVATE", "PUBLIC"] = "PUBLIC",
+    access: Literal["PRIVATE", "PUBLIC"] = "PRIVATE",
     db_session: AsyncSession = Depends(on_db_session),
     storage_session: aiohttp.ClientSession = Depends(on_storage_session),
 ):
@@ -57,7 +57,10 @@ async def put_upload(
 
     domain = base_url.removeprefix("http://").removeprefix("https://").split(":", maxsplit=1)[0]
 
-    resp = RedirectResponse(base_url + result["url"])
+    resp = JSONResponse({
+        "status": "ok",
+        "url": base_url + result["url"]
+    })
     resp.set_cookie(
         "tmp-storage-auth", user_auth,
         domain=domain if domain != "localhost" else None,

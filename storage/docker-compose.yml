@@ -13,7 +13,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
       - /mnt/vdb1/cv-storage:/storage
 
-  storage:
+  app:
     build: .
     ports:
       - "5011:5000"
@@ -27,6 +27,8 @@ services:
       CHUNK_SIZE: 128
     depends_on:
       - db
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
 volumes:
   postgres_data:
