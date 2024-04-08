@@ -7,10 +7,10 @@ from passlib.context import CryptContext
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from models.user import UserData
+
 from utils.config import AppConfig
 from utils.depends import on_db_session, on_current_user
-
-from models.user import UserData
 
 import jwt
 import datetime
@@ -20,6 +20,10 @@ import string
 class UserAuthModel(BaseModel):
     email: str
     password: str
+
+
+class UserUpdatePasswordModel(BaseModel):
+    new_password: str
 
 
 router = APIRouter()
@@ -42,12 +46,11 @@ def create_access_token(data: dict):
     return encoded_jwt
 
 
-@router.route('/register')
+@router.post('/register')
 async def register(user_data: UserAuthModel, db_session: AsyncSession = Depends(on_db_session)):
-    email_subseq = ['@gmail.com', '@mail.ru', '@yandex.ru']
     valid_chars = set(string.ascii_letters + string.digits + "_-.@$")
 
-    if all(email_subseq) not in user_data.email:
+    if '@' not in user_data.email:
         return JSONResponse({
             "status": "error",
             "message": "Given email is invalid",
@@ -69,7 +72,7 @@ async def register(user_data: UserAuthModel, db_session: AsyncSession = Depends(
 
     async with db_session.begin():
         db_session.add(UserData(
-            username=user_data.username,
+            email=user_data.email,
             password_hash=password_hash
         ))
         await db_session.commit()
@@ -80,7 +83,7 @@ async def register(user_data: UserAuthModel, db_session: AsyncSession = Depends(
     }, status_code=200)
 
 
-@router.route('/login')
+@router.post('/login')
 async def login(user_data: UserAuthModel, db_session: AsyncSession = Depends(on_db_session)):
     async with db_session.begin():
         user = await db_session.execute(
@@ -107,9 +110,9 @@ async def login(user_data: UserAuthModel, db_session: AsyncSession = Depends(on_
     }, status_code=200)
 
 
-@router.route('/update_password')
+@router.post('/update_password')
 async def update_password(
-    new_password: str,
+    upd_data: UserUpdatePasswordModel,
     db_session: AsyncSession = Depends(on_db_session),
     user_id: int = Depends(on_current_user),
 ):
@@ -124,8 +127,10 @@ async def update_password(
                 "message": "Invalid user",
             }, status_code=403)
 
-    if new_password:
-        user.password_hash = get_password_hash(new_password)
+        if upd_data.new_password:
+            user.password_hash = get_password_hash(upd_data.new_password)
+        await db_session.commit()
+
     return JSONResponse({
         "status": "ok",
         "message": "Password updated successfully",
