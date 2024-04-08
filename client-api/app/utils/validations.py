@@ -3,7 +3,7 @@ from starlette.datastructures import Headers
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from config import AppConfig
+from .config import AppConfig
 from models.user import UserData
 
 

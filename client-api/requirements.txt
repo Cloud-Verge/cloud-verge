@@ -4,3 +4,5 @@ fastapi
 sqlalchemy
 psycopg2-binary
 uvicorn
+pyjwt
+passlib

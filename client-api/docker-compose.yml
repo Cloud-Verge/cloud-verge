@@ -21,6 +21,7 @@ services:
       ADMIN_TOKEN: "CLIENT_API_ADMIN_TOKEN"
       STORAGE_URL: "http://host.docker.internal:5011"
       STORAGE_TOKEN: "STORAGE_ADMIN_TOKEN"
+      SECRET_KEY: "SECRET_KEY"
     depends_on:
       - db
     extra_hosts:
