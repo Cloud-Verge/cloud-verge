@@ -1,4 +1,5 @@
 import uuid
+from typing import Optional
 
 import aiohttp
 from aiohttp.client_exceptions import ClientConnectionError
@@ -12,7 +13,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from models.file import FileEntry
-from utils.depends import on_db_session, on_storage_session
+from utils.depends import on_db_session, on_storage_session, on_current_user, on_current_user_force
 from utils.validations import parse_user
 
 router = APIRouter()
@@ -20,19 +21,11 @@ router = APIRouter()
 
 @router.get("/upload_link")
 async def get_upload_link(
-    request: Request,
     access: Literal["PRIVATE", "PUBLIC"] = "PRIVATE",
     db_session: AsyncSession = Depends(on_db_session),
     storage_session: aiohttp.ClientSession = Depends(on_storage_session),
+    user_id: int = Depends(on_current_user_force),
 ):
-    async with db_session.begin():
-        user = await parse_user(db_session, request.headers)
-        if user is None:
-            return JSONResponse({
-                "status": "error",
-                "message": "Authorization failed",
-            }, status_code=401)
-
     file_id = str(uuid.uuid4())
     user_auth = str(uuid.uuid4())
     async with storage_session.post("/demands/upload", json={
@@ -49,7 +42,7 @@ async def get_upload_link(
     async with db_session.begin():
         db_session.add(FileEntry(
             id=file_id,
-            owner=user.id,
+            owner=user_id,
             access=file_access,
             locations=[]
         ))
@@ -75,6 +68,7 @@ async def get_download(
     file_id: str,
     db_session: AsyncSession = Depends(on_db_session),
     storage_session: aiohttp.ClientSession = Depends(on_storage_session),
+    user_id: Optional[int] = Depends(on_current_user),
 ):
     async with db_session.begin():
         file = await db_session.execute(
@@ -87,13 +81,11 @@ async def get_download(
                 "message": "File not found",
             }, status_code=404)
 
-        if file.access != 0:
-            user = await parse_user(db_session, request.headers)
-            if user is None or user.id != file.owner:
-                return JSONResponse({
-                    "status": "error",
-                    "message": "Access denied",
-                }, status_code=401)
+        if file.access != 0 and user_id != file.owner:
+            return JSONResponse({
+                "status": "error",
+                "message": "Access denied",
+            }, status_code=401)
 
     user_auth = str(uuid.uuid4())
 
@@ -126,19 +118,12 @@ async def get_download(
 
 @router.get("/list")
 async def get_files_list(
-    request: Request,
     db_session: AsyncSession = Depends(on_db_session),
+    user_id: int = Depends(on_current_user_force),
 ):
     async with db_session.begin():
-        user = await parse_user(db_session, request.headers)
-        if user is None:
-            return JSONResponse({
-                "status": "error",
-                "message": "Authorization failed",
-            }, status_code=401)
-
         result = await db_session.execute(
-            select(FileEntry).where(FileEntry.owner == user.id)
+            select(FileEntry).where(FileEntry.owner == user_id)
         )
 
     files = []

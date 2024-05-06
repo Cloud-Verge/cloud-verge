@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends
 from fastapi.responses import JSONResponse
 
 from pydantic import BaseModel
@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from models.user import UserData
 
 from utils.config import AppConfig
-from utils.depends import on_db_session, on_current_user
+from utils.depends import on_db_session, on_current_user_force
 
 import jwt
 import datetime
@@ -114,7 +114,7 @@ async def login(user_data: UserAuthModel, db_session: AsyncSession = Depends(on_
 async def update_password(
     upd_data: UserUpdatePasswordModel,
     db_session: AsyncSession = Depends(on_db_session),
-    user_id: int = Depends(on_current_user),
+    user_id: int = Depends(on_current_user_force),
 ):
     async with db_session.begin():
         user = await db_session.execute(
