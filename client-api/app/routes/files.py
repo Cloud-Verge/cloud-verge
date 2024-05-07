@@ -14,7 +14,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from models.file import FileEntry
 from utils.depends import on_db_session, on_storage_session, on_current_user, on_current_user_force
-from utils.validations import parse_user
 
 router = APIRouter()
 
@@ -47,6 +46,62 @@ async def get_upload_link(
             locations=[]
         ))
         await db_session.commit()
+
+    domain = base_url.removeprefix("http://").removeprefix("https://").split(":", maxsplit=1)[0]
+
+    resp = JSONResponse({
+        "status": "ok",
+        "url": base_url + result["url"]
+    })
+    resp.set_cookie(
+        "tmp-storage-auth", user_auth,
+        domain=domain if domain != "localhost" else None,
+        max_age=360, httponly=True,
+    )
+    return resp
+
+
+@router.get("/download_link/{file_id}")
+async def get_download_link(
+    file_id: str,
+    db_session: AsyncSession = Depends(on_db_session),
+    storage_session: aiohttp.ClientSession = Depends(on_storage_session),
+    user_id: Optional[int] = Depends(on_current_user),
+):
+    async with db_session.begin():
+        file = await db_session.execute(
+            select(FileEntry).where(FileEntry.id == file_id)
+        )
+        file = file.scalar_one_or_none()
+        if file is None:
+            return JSONResponse({
+                "status": "error",
+                "message": "File not found",
+            }, status_code=404)
+
+        if file.access != 0 and user_id != file.owner:
+            return JSONResponse({
+                "status": "error",
+                "message": "Access denied",
+            }, status_code=401)
+
+    user_auth = str(uuid.uuid4())
+
+    try:
+        async with storage_session.post("/demands/download", json={
+            "file_id": file_id,
+            "user_auth": user_auth,
+        }) as resp:
+            base_url = str(resp.url).removesuffix("/demands/download")
+            base_url = base_url.replace("host.docker.internal", "localhost")
+            result = await resp.json()
+            if result["status"] != "ok":
+                return JSONResponse(result, status_code=resp.status)
+    except ClientConnectionError:
+        return JSONResponse({
+                "status": "error",
+                "message": "Unable to contact storage",
+            }, status_code=500)
 
     domain = base_url.removeprefix("http://").removeprefix("https://").split(":", maxsplit=1)[0]
 
