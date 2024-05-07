@@ -8,4 +8,5 @@ class UserData(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     email: Mapped[str] = mapped_column(index=True, nullable=False)
+    oauth_token: Mapped[str] = mapped_column(nullable=True)
     password_hash: Mapped[str] = mapped_column(nullable=False)

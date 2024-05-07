@@ -103,6 +103,15 @@ async def login(user_data: UserAuthModel, db_session: AsyncSession = Depends(on_
         }, status_code=401)
 
     jwt_token = create_access_token(data={"sub": user.id})
+
+    async with db_session.begin():
+        user = await db_session.execute(
+            select(UserData).where(UserData.email == user_data.email)
+        )
+        user = user.scalar_one_or_none()
+        setattr(user, "oauth_token", jwt_token)
+        await db_session.commit()
+
     return JSONResponse({
         "status": "ok",
         "message": "Successful auth",
