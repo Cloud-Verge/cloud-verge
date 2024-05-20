@@ -1,6 +1,6 @@
 from starlette.datastructures import Headers
 
-from config import AppConfig
+from .config import AppConfig
 
 
 def get_token(headers: Headers) -> str | None:

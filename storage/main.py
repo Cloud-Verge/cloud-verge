@@ -2,9 +2,10 @@ import os
 
 from fastapi import FastAPI
 
-from config import AppConfig
 from models.base import Base
 from routes import router
+
+from utils.config import AppConfig
 from utils.depends import engine
 
 

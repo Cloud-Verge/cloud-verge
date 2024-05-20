@@ -10,9 +10,9 @@ from fastapi.responses import JSONResponse, FileResponse
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from config import AppConfig
 from models.file import FileEntry
 
+from utils.config import AppConfig
 from utils.caches import downloads_cache, uploads_cache
 from utils.depends import on_db_session, on_balancer_session
 from utils.validations import get_token
