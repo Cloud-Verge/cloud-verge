@@ -1,0 +1,5 @@
+grpcio
+grpcio-tools
+asyncpg
+sqlalchemy
+psycopg2-binary

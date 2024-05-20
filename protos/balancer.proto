@@ -1,0 +1,47 @@
+syntax = "proto3";
+
+package posts;
+
+
+service Balancer {
+    rpc AskUpload(UploadDemand) returns (DemandResponse) {}
+
+    rpc AskDownload(DownloadDemand) returns (DemandResponse) {}
+
+    rpc AskDelete(DeleteDemand) returns (SimpleResponse) {}
+
+    rpc FeedStorageEvent(StorageEvent) returns (SimpleResponse) {}
+}
+
+message UploadDemand {
+    string file_id = 1;
+
+    string tmp_storage_auth = 2;
+}
+
+message DownloadDemand {
+    string file_id = 1;
+
+    optional string tmp_storage_auth = 2;
+}
+
+message DeleteDemand {
+    string file_id = 1;
+}
+
+message StorageEvent {
+    string storage_id = 1;
+    string file_id = 2;
+
+    optional string filename = 3;
+    optional string localpath = 4;
+}
+
+message SimpleResponse {
+    string status = 1;
+}
+
+message DemandResponse {
+    string status = 1;
+    optional string url = 2;
+}

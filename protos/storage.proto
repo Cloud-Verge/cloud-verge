@@ -1,0 +1,37 @@
+syntax = "proto3";
+
+package posts;
+
+
+service Storage {
+    rpc AskUpload(UploadDemand) returns (DemandResponse) {}
+
+    rpc AskDownload(DownloadDemand) returns (DemandResponse) {}
+
+    rpc AskDelete(DeleteDemand) returns (SimpleResponse) {}
+}
+
+message UploadDemand {
+    string file_id = 1;
+    string tmp_storage_auth = 2;
+}
+
+message DownloadDemand {
+    string localpath = 1;
+    string filename = 2;
+    optional string tmp_storage_auth = 3;
+}
+
+message DeleteDemand {
+    string file_id = 1;
+    string localpath = 2;
+}
+
+message SimpleResponse {
+    string status = 1;
+}
+
+message DemandResponse {
+    string status = 1;
+    optional string handler = 2;
+}
