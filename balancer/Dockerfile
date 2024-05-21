@@ -15,6 +15,6 @@ RUN pip install -r requirements.txt
 
 RUN mkdir /app/protos/
 RUN python -m grpc_tools.protoc -I/protos --python_out=/app/protos --pyi_out=/app/protos --grpc_python_out=/app/protos /protos/balancer.proto
-RUN python -m grpc_tools.protoc -I/protos --python_out=/app/protos --pyi_out=/app/protos --grpc_python_out=/app/protos /protos/posts.proto
+RUN python -m grpc_tools.protoc -I/protos --python_out=/app/protos --pyi_out=/app/protos --grpc_python_out=/app/protos /protos/storage.proto
 
 ENTRYPOINT ["python", "main.py"]
